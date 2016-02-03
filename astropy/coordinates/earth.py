@@ -253,9 +253,9 @@ class EarthLocation(u.Quantity):
                   this returns.
         """
         return cls._get_site_registry().names
-
+    # to fix the ipython warning Could not access the online site list.
     @classmethod
-    def _get_site_registry(cls, force_download=False, force_builtin=False):
+    def _get_site_registry(cls, force_download=True, force_builtin=False):
         """
         Gets the site registry.  The first time this either downloads or loads
         from the data file packaged with astropy.  Subsequent calls will use the

@@ -158,7 +158,7 @@ class LatexData(core.BaseData):
         if self.data_start:
             return find_latex_line(lines, self.data_start)
         else:
-            return self.header.start_line(lines)
+            return self.header.start_line(lines) + 1
 
     def end_line(self, lines):
         if self.data_end:
@@ -310,8 +310,8 @@ class Latex(core.BaseReader):
         self.data.comment = self.header.comment
 
     def write(self, table=None):
-        self.header.start_line = 0
-        self.data.start_line = 0
+        self.header.start_line = None
+        self.data.start_line = None
         return core.BaseReader.write(self, table=table)
 
 
@@ -384,7 +384,12 @@ class AASTexData(LatexData):
 
     def write(self, lines):
         lines.append(self.data_start)
+        lines_length_initial = len(lines)
         core.BaseData.write(self, lines)
+        # To remove extra space(s) and // appended which creates an extra new line
+        # in the end.
+        if len(lines) > lines_length_initial:
+            lines[-1] = re.sub(r'\s* \\ \\ \s* $', '', lines[-1], flags=re.VERBOSE)
         lines.append(self.data_end)
         add_dictval_to_list(self.latex, 'tablefoot', lines)
         lines.append(r'\end{' + self.latex['tabletype'] + r'}')

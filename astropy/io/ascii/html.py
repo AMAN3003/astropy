@@ -1,7 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """An extensible HTML table reader and writer.
+
 html.py:
   Classes to read and write HTML tables
+
 `BeautifulSoup <http://www.crummy.com/software/BeautifulSoup/>`_
 must be installed to read HTML tables.
 """
@@ -63,6 +65,7 @@ def identify_table(soup, htmldict, numtable):
 class HTMLInputter(core.BaseInputter):
     """
     Input lines of HTML in a valid form.
+
     This requires `BeautifulSoup
         <http://www.crummy.com/software/BeautifulSoup/>`_ to be installed.
     """
@@ -129,6 +132,7 @@ class HTMLSplitter(core.BaseSplitter):
 class HTMLOutputter(core.TableOutputter):
     """
     Output the HTML data as an ``astropy.table.Table`` object.
+
     This subclass allows for the final table to contain
     multidimensional columns (defined using the colspan attribute
     of <th>).
@@ -239,22 +243,28 @@ class HTMLData(core.BaseData):
 class HTML(core.BaseReader):
     """
     Read and write HTML tables.
+
     In order to customize input and output, a dict of parameters may
     be passed to this class holding specific customizations.
+
     **htmldict** : Dictionary of parameters for HTML input/output.
+
         * css : Customized styling
             If present, this parameter will be included in a <style>
             tag and will define stylistic attributes of the output.
+
         * table_id : ID for the input table
             If a string, this defines the HTML id of the table to be processed.
             If an integer, this specifies the index of the input table in the
             available tables. Unless this parameter is given, the reader will
             use the first table found in the input file.
+
         * multicol : Use multi-dimensional columns for output
             The writer will output tuples as elements of multi-dimensional
             columns if this parameter is true, and if not then it will
             use the syntax 1.36583e-13 .. 1.36583e-13 for output. If not
             present, this parameter will be true by default.
+
         * parser : Specific HTML parsing library to use
             If specified, this specifies which HTML parsing library
             BeautifulSoup should use as a backend. The options to choose
@@ -263,9 +273,13 @@ class HTML(core.BaseReader):
             'html5lib'. html5lib is a highly lenient parser and therefore
             might work correctly for unusual input if a different parser
             fails.
+
         * jsfiles : list of js files to include when writing table.
+
         * cssfiles : list of css files to include when writing table.
+
         * js : js script to include in the body when writing table.
+
         * table_class : css class for the table
     """
 

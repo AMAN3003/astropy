@@ -18,7 +18,7 @@ from numpy.testing import (
 
 from ...tests.helper import raises, catch_warnings, pytest
 from ... import wcs
-from .. import _wcs
+from .. import _wcs  # pylint: disable=W0611
 from ...utils.data import (
     get_pkg_data_filenames, get_pkg_data_contents, get_pkg_data_filename)
 from ...utils.misc import NumpyRNGContext
@@ -424,8 +424,12 @@ def test_validate():
     with catch_warnings():
         results = wcs.validate(get_pkg_data_filename("data/validate.fits"))
         results_txt = repr(results)
-        if wcs._wcs.__version__[0] == '5':
-            filename = 'data/validate.5.0.txt'
+        version = wcs._wcs.__version__
+        if version[0] == '5':
+            if version >= '5.13':
+                filename = 'data/validate.5.13.txt'
+            else:
+                filename = 'data/validate.5.0.txt'
         else:
             filename = 'data/validate.txt'
         with open(get_pkg_data_filename(filename), "r") as fd:

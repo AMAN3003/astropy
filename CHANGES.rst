@@ -32,6 +32,19 @@ New Features
 
 - ``astropy.nddata``
 
+  - Added ``UnknownUncertainty`` as ``NDUncertainty`` subclass which cannot
+    be used for error propagation. [#4272]
+
+  - ``StdDevUncertainty`` implements error propagation using it's ``unit`` and
+    a given ``correlation`` between the datasets. [#4272]
+
+  - ``NDArithmeticMixin`` allows for arithmetic operations with anything that
+    can be wrapped by the class. [#4272]
+
+  - ``NDArithmeticMixin`` provides methods for arithmetic operations where the
+    first operand is not an ``NDArithmeticMixin`` subclass via classmethods
+    called ``ic_add``, ``ic_subtract``, etc. [#4272]
+
 - ``astropy.stats``
 
   - Added ``jackknife`` resampling method. [#3708]
@@ -59,11 +72,18 @@ New Features
 
 - ``astropy.utils``
 
+  - Implemented a generic and extensible way of merging metadata. [#4459]
+
+  - Added ``format_doc`` decorator which allows to replace and/or format the
+    current docstring of an object. [#4242]
+
 - ``astropy.visualization``
 
 - ``astropy.vo``
 
 - ``astropy.wcs``
+
+  - wcslib was updated to v5.14 [#4579]
 
 API changes
 ^^^^^^^^^^^
@@ -84,6 +104,8 @@ API changes
 
 - ``astropy.coordinates``
 
+  - Removed compatibility layer for pre-v0.4 API. [#4447]
+
 - ``astropy.cosmology``
 
 - ``astropy.io.ascii``
@@ -99,6 +121,33 @@ API changes
 - ``astropy.modeling``
 
 - ``astropy.nddata``
+
+  - ``NDData``: added an optional parameter ``copy``
+    which is False by default. If it is True all other parameters are copied
+    before saving them as attributes. If False the parameters are only copied
+    if there is no way of saving them as reference. [#4270]
+
+  - ``NDData``: ``Masked_Quantity`` objects are allowed as ``data``
+    parameter. [#4270]
+
+  - ``NDUncertainty``: Added ``array``, ``unit`` and ``copy`` as optional
+    parameters. [#4272]
+
+  - ``NDUncertainty``: Public methods ``propagate_add``, etc. are replaced by
+    a general ``propagate`` method. [#4272]
+
+  - ``StdDevUncertainty``: added an optional parameter ``copy`` which is False
+    by default. [#4272]
+
+  - ``NDArithmeticMixin``: Added ``handle_mask``, ``handle_meta`` and
+    ``compare_wcs`` and ``uncertainty_correlation`` as optional parameters.
+    [#4272]
+
+  - ``NDArithmeticMixin``: The optional ``propagate_uncertainties`` parameter
+    can also be ``None``. [#4272]
+
+  - ``NDArithmeticMixin``: Does not compare the wcs for equality except if
+    ``compare_wcs`` is given as function that compares it. [#4272]
 
 - ``astropy.stats``
 
@@ -124,6 +173,9 @@ API changes
     Python 'gzip' module directly instead. [#4464]
 
   - The deprecated ``ScienceStateAlias`` class has been removed. [#2767, #4446]
+
+  - The astropy.utils.compat.subprocess module has now been deprecated. Use the
+    Python 'subprocess' module instead. [#4483]
 
 - ``astropy.visualization``
 
@@ -160,12 +212,25 @@ Bug fixes
 
 - ``astropy.modeling``
 
-  - Fixed display of compound model expressions and components when printing
-    compound model instances. [#4414]
-
 - ``astropy.nddata``
 
-- ``astropy.stats``
+  - ``NDDataBase`` does not implement a setter or getter for ``uncertainty``,
+    which is now an abstractproperty. [#4270]
+
+  - ``NDData`` wraps the ``uncertainty`` inside an ``UnknownUncertainty``
+    if no ``uncertainty_type`` attribute is present in the uncertainty instead
+    of raising an Exception. [#4270]
+
+  - ``NDData`` The ``uncertainty_type`` of the ``uncertainty`` is no longer
+    required to be a string, but it is still recommended. [#4270]
+
+  - ``NDData`` now sets the ``parent_nddata`` of the ``uncertainty`` if the
+    uncertainty is ``NDUncertainty``-like. [#4152, #4270]
+
+  - ``NDArithmeticMixin`` does provide correct resulting uncertainties for
+    ``divide`` and ``multiply`` if only one uncertainty was set. [#4152, #4272]
+
+ - ``astropy.stats``
 
 - ``astropy.table``
 
@@ -179,6 +244,8 @@ Bug fixes
 
   - The astropy.utils.compat.fractions module has now been deprecated. Use the
     Python 'fractions' module directly instead. [#4463]
+  - Added ``format_doc`` decorator which allows to replace and/or format the
+    current docstring of an object. [#4242]
 
 - ``astropy.visualization``
 
@@ -192,10 +259,174 @@ Bug fixes
 Other Changes and Additions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+- Python 2.6 is no longer supported. [#4486]
+
+
+1.1.2 (unreleased)
+------------------
+
+New Features
+^^^^^^^^^^^^
+
+- ``astropy.config``
+
+- ``astropy.constants``
+
+- ``astropy.convolution``
+
+- ``astropy.coordinates``
+
+- ``astropy.cosmology``
+
+- ``astropy.io.ascii``
+
+- ``astropy.io.fits``
+
+- ``astropy.io.misc``
+
+- ``astropy.io.registry``
+
+- ``astropy.io.votable``
+
+- ``astropy.modeling``
+
+- ``astropy.nddata``
+
+- ``astropy.stats``
+
+- ``astropy.sphinx``
+
+- ``astropy.table``
+
+- ``astropy.time``
+
+- ``astropy.units``
+
+- ``astropy.utils``
+
+- ``astropy.vo``
+
+- ``astropy.wcs``
+
+API Changes
+^^^^^^^^^^^
+
+- ``astropy.config``
+
+- ``astropy.constants``
+
+- ``astropy.convolution``
+
+- ``astropy.coordinates``
+
+- ``astropy.cosmology``
+
+- ``astropy.io.ascii``
+
+- ``astropy.io.fits``
+
+- ``astropy.io.misc``
+
+- ``astropy.io.registry``
+
+- ``astropy.io.votable``
+
+- ``astropy.modeling``
+
+- ``astropy.nddata``
+
+- ``astropy.stats``
+
+- ``astropy.table``
+
+- ``astropy.time``
+
+- ``astropy.units``
+
+- ``astropy.utils``
+
+- ``astropy.vo``
+
+- ``astropy.wcs``
+
+Bug Fixes
+^^^^^^^^^
+
+- ``astropy.config``
+
+- ``astropy.constants``
+
+- ``astropy.convolution``
+
+- ``astropy.coordinates``
+
+- ``astropy.cosmology``
+
+- ``astropy.io.ascii``
+
+  - Fixed handling of CDS data file when no description is given and also
+    included stripping out of markup for missing value from description. [#4437]
+
+- ``astropy.io.fits``
+
+  - Fixed possible segfault during error handling in FITS tile
+    compression. [#4489]
+
+  - Fixed crash on pickling of binary table columns with the 'X', 'P', or
+    'Q' format. [#4514]
+
+  - Fixed memory / reference leak that could occur when copying a ``FITS_rec``
+    object (the ``.data`` for table HDUs). [#520]
+
+  - Fixed a memory / reference leak in ``FITS_rec`` that occurred in a wide
+    range of cases, especially after writing FITS tables to a file, but in
+    other cases as well. [#4539]
+
+- ``astropy.io.misc``
+
+- ``astropy.io.registry``
+
+- ``astropy.io.votable``
+
+- ``astropy.modeling``
+
+- ``astropy.nddata``
+
+- ``astropy.stats``
+
+- ``astropy.table``
+
+  - Fixed bug when replacing a table column with a mixin column like
+    Quantity or Time. [#4601]
+
+- ``astropy.time``
+
+- ``astropy.units``
+
+- ``astropy.utils``
+
+- ``astropy.visualization``
+
+  - Fixed ``fits2bitmap`` script to allow ext flag to contain extension
+    names or numbers. [#4468]
+
+  - Fixed ``fits2bitmap`` default output filename generation for
+    compressed FITS files. [#4468]
+
+- ``astropy.vo``
+
+- ``astropy.wcs``
+
+  - Fixed possible exception in handling of SIP headers that was introduced in
+    v1.1.1. [#4492]
+
+Other Changes and Additions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 - Nothing changed yet.
 
 
-1.1.1 (unreleased)
+1.1.1 (2016-01-08)
 ------------------
 
 New Features
@@ -308,6 +539,9 @@ New Features
 
   - Support reading and writing from bzip2 compressed files. i.e. ``.fits.bz2``
     files. [#3789]
+
+  - Included a new command-line script called ``fitsinfo`` to display
+    a summary of the HDUs in one or more FITS files. [#3677]
 
 - ``astropy.io.misc``
 
@@ -736,11 +970,6 @@ Bug fixes
   - Fix an underlying problem that resulted in an uncaught TypeError
     exception when reading a CDS-format file with guessing enabled. [#4120]
 
-- ``astropy.io.fits``
-
-  - Included a new command-line script called ``fitsinfo`` to display
-    a summary of the HDUs in one or more FITS files. [#3677]
-
 - ``astropy.modeling``
 
   - ``Simplex`` fitter now correctly passes additional keywords arguments to
@@ -822,6 +1051,9 @@ New Features
 
 - ``astropy.nddata``
 
+ - ``NDArithmeticMixin`` check for matching WCS now works with
+    ``astropy.wcs.WCS`` objects [#4499]
+
 - ``astropy.stats``
 
 - ``astropy.sphinx``
@@ -894,7 +1126,26 @@ Bug Fixes
 
 - ``astropy.io.ascii``
 
+  - Fixed addition of new line characters after last row of data in
+    ascii.latex.AASTex. [#3888]
+
+  - Fixed reading of Latex tables where the ``\tabular`` tag is in the first
+    line. [#4595]
+
 - ``astropy.io.fits``
+
+  - Fixed possible segfault during error handling in FITS tile
+    compression. [#4489]
+
+  - Fixed crash on pickling of binary table columns with the 'X', 'P', or
+    'Q' format. [#4514]
+
+  - Fixed memory / reference leak that could occur when copying a ``FITS_rec``
+    object (the ``.data`` for table HDUs). [#520]
+
+  - Fixed a memory / reference leak in ``FITS_rec`` that occurred in a wide
+    range of cases, especially after writing FITS tables to a file, but in
+    other cases as well. [#4539]
 
 - ``astropy.io.misc``
 
@@ -903,6 +1154,9 @@ Bug Fixes
 - ``astropy.io.votable``
 
 - ``astropy.modeling``
+
+  - Fixed display of compound model expressions and components when printing
+    compound model instances. [#4414]
 
 - ``astropy.nddata``
 
@@ -917,6 +1171,14 @@ Bug Fixes
 - ``astropy.utils``
 
 - ``astropy.vo``
+
+- ``astropy.visualization``
+
+  - Fixed ``fits2bitmap`` script to allow ext flag to contain extension
+    names or numbers. [#4468]
+
+  - Fixed ``fits2bitmap`` default output filename generation for
+    compressed FITS files. [#4468]
 
 - ``astropy.wcs``
 
@@ -956,6 +1218,11 @@ Bug Fixes
 
   - Pickling of ``EarthLocation`` instances now also works on Python 2. [#4304]
 
+``astropy.io.ascii``
+
+  - Fix fast writer so bytestring column output is not prefixed by 'b' in
+    Python 3. [#4350]
+
 - ``astropy.io.fits``
 
   - Fixed a regression that could cause writes of large FITS files to be
@@ -965,9 +1232,6 @@ Bug Fixes
     of a table column is smaller than the repeat count of its data format.
     This updates that fix in such a way that it works with Numpy 1.10 as well.
     [#4266]
-
-  - Fix fast writer so bytestring column output is not prefixed by 'b' in
-    Python 3. [#4350]
 
 - ``astropy.table``
 

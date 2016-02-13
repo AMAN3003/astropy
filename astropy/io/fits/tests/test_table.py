@@ -1,15 +1,24 @@
 # Licensed under a 3-clause BSD style license - see PYFITS.rst
 from __future__ import division, with_statement, print_function
 
+import contextlib
+import copy
+import gc
+
 import numpy as np
 from numpy import char as chararray
+
+try:
+    import objgraph
+    HAVE_OBJGRAPH = True
+except ImportError:
+    HAVE_OBJGRAPH = False
 
 from ....extern import six
 from ....extern.six.moves import range
 from ....extern.six.moves import cPickle as pickle
 from ....io import fits
 from ....tests.helper import pytest, catch_warnings, ignore_warnings
-from ....utils.compat.numpycompat import NUMPY_LT_1_10
 
 from ..column import Delayed, NUMPY2FITS
 from ..util import decode_ascii
@@ -2351,6 +2360,83 @@ class TestTableFunctions(FitsTestCase):
             assert hdul[1].header['TDIM1'] == '(3,3,2)'
             assert np.all(hdul[1].data['a'][0] == expected)
 
+    @pytest.mark.skipif(str('not HAVE_OBJGRAPH'))
+    def test_reference_leak(self):
+        """Regression test for https://github.com/astropy/astropy/pull/520"""
+
+        def readfile(filename):
+            with fits.open(filename) as hdul:
+                data = hdul[1].data.copy()
+
+            for colname in data.dtype.names:
+                data[colname]
+
+        with _refcounting('FITS_rec'):
+            readfile(self.data('memtest.fits'))
+
+    @pytest.mark.skipif(str('not HAVE_OBJGRAPH'))
+    def test_reference_leak(self, tmpdir):
+        """
+        Regression test for https://github.com/astropy/astropy/pull/4539
+
+        This actually re-runs a small set of tests that I found, during
+        careful testing, exhibited the reference leaks fixed by #4539, but
+        now with reference counting around each test to ensure that the
+        leaks are fixed.
+        """
+
+        from .test_core import TestCore
+        from .test_connect import TestMultipleHDU
+
+        t1 = TestCore()
+        t1.setup()
+        try:
+            with _refcounting('FITS_rec'):
+                t1.test_add_del_columns2()
+        finally:
+            t1.teardown()
+        del t1
+
+        t2 = self.__class__()
+        for test_name in ['test_recarray_to_bintablehdu',
+                          'test_numpy_ndarray_to_bintablehdu',
+                          'test_new_table_from_recarray',
+                          'test_new_fitsrec']:
+            t2.setup()
+            try:
+                with _refcounting('FITS_rec'):
+                    getattr(t2, test_name)()
+            finally:
+                t2.teardown()
+        del t2
+
+        t3 = TestMultipleHDU()
+        t3.setup_class()
+        try:
+            with _refcounting('FITS_rec'):
+                t3.test_read(tmpdir)
+        finally:
+            t3.teardown_class()
+        del t3
+
+
+@contextlib.contextmanager
+def _refcounting(type_):
+    """
+    Perform the body of a with statement with reference counting for the
+    given type (given by class name)--raises an assertion error if there
+    are more unfreed objects of the given type than when we entered the
+    with statement.
+    """
+
+    gc.collect()
+    refcount = len(objgraph.by_type(type_))
+    yield refcount
+    gc.collect()
+    assert len(objgraph.by_type(type_)) <= refcount, \
+            "More {0!r} objects still in memory than before."
+
+
 
 class TestVLATables(FitsTestCase):
     """Tests specific to tables containing variable-length arrays."""
@@ -2758,3 +2844,38 @@ class TestColumnFunctions(FitsTestCase):
         assert table.data.dtype.names == ('foo',)
         assert table.columns.names == ['foo']
         assert table.data.columns.names == ['foo']
+
+    def test_x_column_deepcopy(self):
+        """
+        Regression test for https://github.com/astropy/astropy/pull/4514
+
+        Tests that columns with the X (bit array) format can be deep-copied.
+        """
+
+        c = fits.Column('xcol', format='5X', array=[1, 0, 0, 1, 0])
+        c2 = copy.deepcopy(c)
+        assert c2.name == c.name
+        assert c2.format == c.format
+        assert np.all(c2.array == c.array)
+
+    def test_p_column_deepcopy(self):
+        """
+        Regression test for https://github.com/astropy/astropy/pull/4514
+
+        Tests that columns with the P/Q formats (variable length arrays) can be
+        deep-copied.
+        """
+
+        c = fits.Column('pcol', format='PJ', array=[[1, 2], [3, 4, 5]])
+        c2 = copy.deepcopy(c)
+        assert c2.name == c.name
+        assert c2.format == c.format
+        assert np.all(c2.array[0] == c.array[0])
+        assert np.all(c2.array[1] == c.array[1])
+
+        c3 = fits.Column('qcol', format='QJ', array=[[1, 2], [3, 4, 5]])
+        c4 = copy.deepcopy(c3)
+        assert c4.name == c3.name
+        assert c4.format == c3.format
+        assert np.all(c4.array[0] == c3.array[0])
+        assert np.all(c4.array[1] == c3.array[1])

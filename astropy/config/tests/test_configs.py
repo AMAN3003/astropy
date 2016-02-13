@@ -7,10 +7,10 @@ from __future__ import (absolute_import, division, print_function,
 import io
 import os
 import sys
+import subprocess
 
 from ...tests.helper import catch_warnings
 from ...extern import six
-from ...utils.compat import subprocess
 
 from ...utils.data import get_pkg_data_filename
 from .. import configuration
@@ -122,7 +122,7 @@ def test_configitem_types():
 
     from ...tests.helper import pytest
 
-    from ..configuration import ConfigNamespace, ConfigItem, get_config
+    from ..configuration import ConfigNamespace, ConfigItem
 
     cio = ConfigItem(['op1', 'op2', 'op3'])
 
@@ -220,7 +220,7 @@ def test_config_noastropy_fallback(monkeypatch):
 
 def test_configitem_setters():
 
-    from ..configuration import ConfigNamespace, ConfigItem, get_config
+    from ..configuration import ConfigNamespace, ConfigItem
 
     class Conf(ConfigNamespace):
         tstnm12 = ConfigItem(42, 'this is another Description')

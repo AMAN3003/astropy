@@ -4,8 +4,7 @@ from __future__ import (absolute_import, division, print_function,
 from ..extern import six
 from ..extern.six.moves import zip as izip
 from ..extern.six.moves import range as xrange
-from .sorted_array import SortedArray
-from .index import QueryError, TableIndices, TableLoc, TableILoc
+from .index import TableIndices, TableLoc, TableILoc
 
 import re
 import sys
@@ -1548,7 +1547,7 @@ class Table(object):
         if name not in self.colnames:
             raise ValueError('column name {0} is not in the table'.format(name))
 
-        if self[name].indices:
+        if self[name].info.indices:
             raise ValueError('cannot replace a table index column')
 
         t = self.__class__([col], names=[name])

@@ -26,19 +26,16 @@ import types
 from collections import OrderedDict
 
 from ..config.paths import set_temp_config, set_temp_cache
-from .helper import (
-    pytest, treat_deprecations_as_exceptions,
-    enable_deprecations_as_exceptions,
-    ignore_warnings)
+from .helper import pytest, treat_deprecations_as_exceptions, ignore_warnings
+from .helper import enable_deprecations_as_exceptions  # pylint: disable=W0611
 from .disable_internet import turn_off_internet, turn_on_internet
-from .output_checker import AstropyOutputChecker, FIX, FLOAT_CMP
+from .output_checker import AstropyOutputChecker, FIX
 from ..utils.argparse import writeable_directory
 from ..utils.introspection import resolve_name
 
-# Needed for Python 2.6 compatibility
 try:
     import importlib.machinery as importlib_machinery
-except ImportError:
+except ImportError:  # Python 2.7
     importlib_machinery = None
 
 # these pytest hooks allow us to mark tests and run the marked tests with
@@ -161,7 +158,10 @@ def pytest_configure(config):
         # handling __doctest_skip__) doesn't happen.
         def collect(self):
             if self.fspath.basename == "conftest.py":
-                module = self.config._conftest.importconftest(self.fspath)
+                try:
+                    module = self.config._conftest.importconftest(self.fspath)
+                except AttributeError:  # pytest >= 2.8.0
+                    module = self.config.pluginmanager._importconftest(self.fspath)
             else:
                 try:
                     module = self.fspath.pyimport()
@@ -191,8 +191,14 @@ def pytest_configure(config):
         def runtest(self):
             # satisfy `FixtureRequest` constructor...
             self.funcargs = {}
-            self._fixtureinfo = doctest_plugin.FuncFixtureInfo((), [], {})
-            fixture_request = doctest_plugin.FixtureRequest(self)
+            try:
+                self._fixtureinfo = doctest_plugin.FuncFixtureInfo((), [], {})
+                fixture_request = doctest_plugin.FixtureRequest(self)
+            except AttributeError:  # pytest >= 2.8.0
+                python_plugin = config.pluginmanager.getplugin('python')
+                self._fixtureinfo = python_plugin.FuncFixtureInfo((), [], {})
+                fixture_request = python_plugin.FixtureRequest(self)
+
             failed, tot = doctest.testfile(
                 str(self.fspath), module_relative=False,
                 optionflags=opts, parser=DocTestParserPlus(),
@@ -544,7 +550,10 @@ TESTED_VERSIONS = OrderedDict([('Astropy', __version__)])
 
 def pytest_report_header(config):
 
-    stdoutencoding = getattr(sys.stdout, 'encoding') or 'ascii'
+    try:
+        stdoutencoding = sys.stdout.encoding or 'ascii'
+    except AttributeError:
+        stdoutencoding = 'ascii'
 
     if six.PY2:
         args = [x.decode('utf-8') for x in config.args]

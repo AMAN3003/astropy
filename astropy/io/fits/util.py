@@ -2,7 +2,6 @@
 
 from __future__ import division
 
-import errno
 import gzip
 import itertools
 import io
@@ -260,12 +259,6 @@ def ignore_sigint(func):
                     raise KeyboardInterrupt
 
     return wrapped
-
-
-def first(iterable):
-    """Returns the first element from an iterable."""
-
-    return next(iter(iterable))
 
 
 def pairwise(iterable):

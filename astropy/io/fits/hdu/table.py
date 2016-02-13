@@ -310,18 +310,19 @@ class _TableBaseHDU(ExtensionHDU, _TableLikeHDU):
                     # again, but I think it can be simplified quite a bit with
                     # the use of some appropriate utility functions
                     update_coldefs = {}
+                    # check in if code for whether dtype unsigned int is used or not
                     if 'u' in [data.dtype[k].kind for k in data.dtype.names]:
                         self._uint = True
-                        bzeros = {2: np.uint16(2**15), 4: np.uint32(2**31),
-                                  8: np.uint64(2**63)}
-
+                        bzeros = {1: np.uint8(2**7), 2: np.uint16(2**15), 4: np.uint32(2**31),
+                                  8: np.uint64(2**63)}# redifine bzeroes for uint8 
+                    # the error in the code is because of the np.int8 not defined
                         new_dtype = [
                             (k, data.dtype[k].kind.replace('u', 'i') +
                             str(data.dtype[k].itemsize))
                             for k in data.dtype.names]
 
                         new_data = np.zeros(data.shape, dtype=new_dtype)
-
+                        # bzeroes is dictionary and key error 1 is returned because 10 belongs to uint8
                         for k in data.dtype.fields:
                             dtype = data.dtype[k]
                             if dtype.kind == 'u':

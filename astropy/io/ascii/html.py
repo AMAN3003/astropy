@@ -386,4 +386,3 @@ class HTML(core.BaseReader):
 
         # Fixes XMLWriter's insertion of unwanted line breaks
         return [''.join(lines)]
-

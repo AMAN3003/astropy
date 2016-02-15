@@ -99,9 +99,21 @@ def _sigma_clip(data, sigma=3, sigma_lower=None, sigma_upper=None, iters=5,
     Returns
     -------
     filtered_data : `numpy.ma.MaskedArray`
-        A masked array with the same shape as ``data`` input, where the
-        points rejected by the algorithm have been masked.
-
+        This function returns a masked array,it's is the combination
+        of a standard numpy.ndarray and a mask.When an element of the
+        mask is False, the corresponding element of the associated array
+        is valid and is said to be unmasked. When an element of the
+        mask is True, the corresponding element of the associated array
+        is said to be masked (invalid) i.e like Nan or --.
+    Examples
+    --------
+        This example deals with how to use masked array here we have marked
+        4th element in array to invalid and it can be done creating masked
+        array with value of 4th element 1(true means invalid)
+        >>> import numpy as np
+        >>> import numpy.ma as ma
+        >>> x = np.array([1, 2, 3, -1, 5])
+        >>> mx = ma.masked_array(x, mask=[0, 0, 0, 1, 0])
     Notes
     -----
      1. The routine works by calculating::
